@@ -57,8 +57,14 @@ def _load_wordlist(path: str | None) -> List[str]:
 
 
 def generate_candidates(domain: str, wordlist_path: str | None = None) -> List[str]:
-    """Return a list of ``<word>.<domain>`` candidates to resolve."""
+    """Return a list of ``<word>.<domain>`` candidates to resolve.
+
+    The wordlist order is randomised to avoid sequential scan patterns
+    that could be detected in DNS query logs.
+    """
     words = _load_wordlist(wordlist_path)
+    # Shuffle to avoid predictable alphabetical scanning patterns
+    random.shuffle(words)
     candidates = [f"{word}.{domain}" for word in words]
 
     print(

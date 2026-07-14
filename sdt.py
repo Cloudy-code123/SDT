@@ -140,6 +140,36 @@ def build_parser() -> argparse.ArgumentParser:
         help="Rotate across multiple public DNS resolvers",
     )
 
+    stealth_group.add_argument(
+        "--doh",
+        dest="use_doh",
+        action="store_true",
+        default=False,
+        help="Use DNS-over-HTTPS instead of traditional DNS queries",
+    )
+
+    stealth_group.add_argument(
+        "--timeout-randomize",
+        dest="timeout_randomize",
+        action="store_true",
+        default=False,
+        help="Randomise HTTP request timeouts to avoid timing fingerprinting",
+    )
+
+    stealth_group.add_argument(
+        "--backoff",
+        action="store_true",
+        default=False,
+        help="Enable exponential backoff on failures and rate limits",
+    )
+
+    stealth_group.add_argument(
+        "--max-retries",
+        type=int,
+        default=3,
+        help="Maximum retry attempts per source when using backoff (default: 3)",
+    )
+
     return parser
 
 
@@ -176,6 +206,10 @@ def main() -> None:
         stealth=args.stealth,
         proxy=args.proxy,
         rotate_dns=args.rotate_dns,
+        use_doh=args.use_doh,
+        timeout_randomize=args.timeout_randomize,
+        backoff=args.backoff,
+        max_retries=args.max_retries,
     )
 
     # Launch scanner

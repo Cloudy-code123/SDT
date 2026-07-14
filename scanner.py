@@ -3,6 +3,7 @@ Scanner orchestrator: coordinates passive, active, DNS resolution, and output.
 """
 
 import logging
+import random
 import time
 from typing import List
 
@@ -67,11 +68,23 @@ class Scanner:
             print_success(f"Proxy   : {self.config.proxy}")
         if self.config.rotate_dns:
             print_success("DNS rot.: enabled")
+        if self.config.use_doh:
+            print_success("DoH    : enabled (DNS-over-HTTPS)")
+        if self.config.backoff:
+            print_success(f"Backoff: enabled (max {self.config.max_retries} retries)")
+        if self.config.timeout_randomize:
+            print_success("Timeout: randomised")
         print_separator()
         print()
 
         # 1. Passive enumeration
         passive_results = gather_passive(self.domain, self.config)
+
+        # Random pause between phases to avoid correlated traffic patterns
+        if self.config.delay > 0 or self.config.jitter > 0:
+            phase_pause = random.uniform(2.0, 6.0)
+            logger.debug("Inter-phase pause: %.1fs", phase_pause)
+            time.sleep(phase_pause)
 
         # 2. Active brute-force candidates
         active_candidates = generate_candidates(self.domain, self.wordlist)
