@@ -1,7 +1,7 @@
 """SDT - Subdomain Discovery Tool
 Active enumeration: brute-force subdomain guessing via wordlist.
 """
-
+import random
 import logging
 import os
 from typing import List
