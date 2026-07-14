@@ -18,6 +18,7 @@ from colorama import init as colorama_init
 
 from banner import show_banner, show_disclaimer
 from scanner import Scanner
+from stealth import StealthConfig
 from utils import is_valid_domain, print_error, safe_exit
 
 # ---------------------------------------------------------------------------
@@ -45,7 +46,7 @@ def build_parser() -> argparse.ArgumentParser:
     """Construct and return the CLI argument parser."""
     parser = argparse.ArgumentParser(
         prog="sdt",
-        description="SDT - Subdomain Discovery Tool  v1.0",
+        description="SDT - Subdomain Discovery Tool  v1.1  (stealth-enabled)",
         formatter_class=argparse.RawTextHelpFormatter,
     )
 
@@ -95,6 +96,50 @@ def build_parser() -> argparse.ArgumentParser:
         help="Enable verbose/debug logging",
     )
 
+    # ---- Stealth options ----
+
+    stealth_group = parser.add_argument_group(
+        "Stealth options",
+        "Options to reduce fingerprinting and detection during scans.",
+    )
+
+    stealth_group.add_argument(
+        "-s",
+        "--stealth",
+        action="store_true",
+        default=False,
+        help="Enable stealth mode (randomised delays, UA rotation, jitter)",
+    )
+
+    stealth_group.add_argument(
+        "--delay",
+        type=float,
+        default=0.0,
+        help="Base delay in seconds between requests (default: 0)",
+    )
+
+    stealth_group.add_argument(
+        "--jitter",
+        type=float,
+        default=0.0,
+        help="Random jitter range added to each delay (default: 0)",
+    )
+
+    stealth_group.add_argument(
+        "--proxy",
+        type=str,
+        default=None,
+        help="HTTP/SOCKS proxy URL (e.g. socks5://127.0.0.1:9050)",
+    )
+
+    stealth_group.add_argument(
+        "--rotate-dns",
+        dest="rotate_dns",
+        action="store_true",
+        default=False,
+        help="Rotate across multiple public DNS resolvers",
+    )
+
     return parser
 
 
@@ -124,6 +169,15 @@ def main() -> None:
     if args.threads < 1 or args.threads > 200:
         safe_exit("Thread count must be between 1 and 200.")
 
+    # Build stealth config
+    stealth_config = StealthConfig(
+        delay=args.delay,
+        jitter=args.jitter,
+        stealth=args.stealth,
+        proxy=args.proxy,
+        rotate_dns=args.rotate_dns,
+    )
+
     # Launch scanner
     try:
         scanner = Scanner(
@@ -132,6 +186,7 @@ def main() -> None:
             output=args.output,
             json_output=args.json_output,
             wordlist=args.wordlist,
+            config=stealth_config,
         )
         scanner.run()
 

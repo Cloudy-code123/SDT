@@ -11,6 +11,7 @@ from colorama import Fore, Style
 from active import generate_candidates
 from dnsresolver import resolve_all
 from passive import gather_passive
+from stealth import StealthConfig
 from utils import (
     print_info,
     print_no_dns,
@@ -34,12 +35,14 @@ class Scanner:
         output: str | None = None,
         json_output: bool = False,
         wordlist: str | None = None,
+        config: StealthConfig | None = None,
     ) -> None:
         self.domain: str = domain
         self.threads: int = threads
         self.output: str | None = output
         self.json_output: bool = json_output
         self.wordlist: str | None = wordlist
+        self.config: StealthConfig = config or StealthConfig()
 
         self.found: List[str] = []
         self.valid_dns: List[str] = []
@@ -58,11 +61,17 @@ class Scanner:
         print_success(f"Target  : {self.domain}")
         local_time = time.strftime("%H:%M:%S", time.localtime())
         print_success(f"Started : {local_time}")
+        if self.config.delay > 0 or self.config.jitter > 0:
+            print_success(f"Stealth : delay={self.config.delay:.1f}s  jitter={self.config.jitter:.1f}s")
+        if self.config.proxy:
+            print_success(f"Proxy   : {self.config.proxy}")
+        if self.config.rotate_dns:
+            print_success("DNS rot.: enabled")
         print_separator()
         print()
 
         # 1. Passive enumeration
-        passive_results = gather_passive(self.domain)
+        passive_results = gather_passive(self.domain, self.config)
 
         # 2. Active brute-force candidates
         active_candidates = generate_candidates(self.domain, self.wordlist)
@@ -73,7 +82,7 @@ class Scanner:
 
         # 4. DNS resolution
         self.valid_dns, self.invalid_dns = resolve_all(
-            all_candidates, threads=self.threads
+            all_candidates, threads=self.threads, config=self.config
         )
 
         self.found = sorted(set(self.valid_dns))
