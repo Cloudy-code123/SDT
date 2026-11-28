@@ -116,5 +116,3 @@ sdt/
 ## Legal Disclaimer
 
 This tool is intended **only** for discovering subdomains of domains that you own or are explicitly authorized to assess. The user is responsible for complying with all applicable laws and obtaining permission before use. Unauthorized scanning of third-party domains is illegal and unethical.
-
-1
